@@ -223,7 +223,7 @@
           "parameters": [
             {
               "name": "X-Api-Key",
-              "value": "82206872fb284a6e9274110f9927c798"
+              "value": "{SUA_NEWSAPI}"
             }
           ]
         },
