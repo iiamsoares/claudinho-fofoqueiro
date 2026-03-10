@@ -1,0 +1,371 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1b5b8514-8c15-42b3-8d02-525b6b2e94c7",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "articles = _items[0][\"json\"][\"articles\"]\n\ncleaned = []\n\nfor article in articles:\n    if article.get(\"title\") and article.get(\"description\"):\n        cleaned.append({\n            \"json\": {\n                \"title\": article[\"title\"],\n                \"description\": article[\"description\"],\n                \"url\": article[\"url\"],\n                \"source\": article[\"source\"][\"name\"] if article.get(\"source\") else \"\",\n                \"publishedAt\": article.get(\"publishedAt\", \"\")\n            }\n        })\n\nreturn cleaned"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "e0bd3f6a-dedf-4f1c-9aca-5eba25b23e7e",
+      "name": "Code in Python"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Você é um analista de tecnologia.\n\nReceberá 5 notícias recentes de tecnologia já filtradas por relevância.\n\nSua tarefa é criar um briefing diário em português, com linguagem clara, objetiva e útil para um profissional da área de tecnologia.\n\nPara cada notícia:\n1. mostre o título\n2. faça um resumo em até 2 linhas\n3. explique por que ela é importante\n\nNo final, crie uma seção chamada \"Tendências do Dia\" com os principais temas observados.\n\nFormato esperado:\n\n🚀 Tech Briefing do Dia\n\n1️⃣ Título\nResumo:\nImportância:\n\n2️⃣ Título\nResumo:\nImportância:\n\nTendências do Dia:\n• ...\n• ...\n• ...\n\nAqui estão as notícias:\n{{ $json.news_brief_input }}"
+            }
+          ]
+        },
+        "simplify": "={{ true }}",
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        1088,
+        0
+      ],
+      "id": "d46b22d6-ebaa-4e64-afe9-893d60ef7636",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "A5naVlW82ZfdlruD",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "keywords = {\n    \"ai\": 3,\n    \"openai\": 3,\n    \"llm\": 3,\n    \"python\": 2,\n    \"javascript\": 2,\n    \"cloud\": 2,\n    \"automation\": 2,\n    \"startup\": 1,\n    \"developer\": 2,\n    \"security\": 2\n}\n\ncategorized = []\n\nfor item in _items:\n    article = item[\"json\"]\n    text = f'{article.get(\"title\", \"\")} {article.get(\"description\", \"\")}'.lower()\n\n    score = 0\n    for key, value in keywords.items():\n        if key in text:\n            score += value\n\n    category = \"Technology\"\n    if \"ai\" in text or \"openai\" in text or \"llm\" in text:\n        category = \"AI\"\n    elif \"python\" in text or \"javascript\" in text or \"developer\" in text:\n        category = \"Development\"\n    elif \"cloud\" in text:\n        category = \"Cloud\"\n    elif \"security\" in text:\n        category = \"Security\"\n    elif \"startup\" in text:\n        category = \"Startups\"\n\n    categorized.append({\n        \"json\": {\n            \"date\": article.get(\"publishedAt\", \"\")[:10],\n            \"title\": article.get(\"title\", \"\"),\n            \"description\": article.get(\"description\", \"\"),\n            \"source\": article.get(\"source\", \"\"),\n            \"publishedAt\": article.get(\"publishedAt\", \"\"),\n            \"relevance_score\": score,\n            \"category\": category,\n            \"url\": article.get(\"url\", \"\")\n        }\n    })\n\ncategorized.sort(key=lambda x: x[\"json\"][\"relevance_score\"], reverse=True)\n\nreturn categorized[:5]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        592,
+        0
+      ],
+      "id": "4c5ccb82-7dcc-49c2-bc53-b5ea81a92218",
+      "name": "Code in Python1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1K8oAlRCD6S-qDLEI5EzZ0L4yN6EqgvidOv2yW8DkE1k",
+          "mode": "list",
+          "cachedResultName": "Teach News History",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1K8oAlRCD6S-qDLEI5EzZ0L4yN6EqgvidOv2yW8DkE1k/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "news_history",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1K8oAlRCD6S-qDLEI5EzZ0L4yN6EqgvidOv2yW8DkE1k/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "source ": "={{ $json.source }}",
+            "title ": "={{ $json.title }}",
+            "date ": "={{ $json.date }}",
+            "publishedAt": "={{ $json.publishedAt }}",
+            "relevance_score": "={{ $json.relevance_score }}",
+            "category": "={{ $json.category }}",
+            "url": "={{ $json.url }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "date ",
+              "displayName": "date ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "title ",
+              "displayName": "title ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source ",
+              "displayName": "source ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "publishedAt",
+              "displayName": "publishedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "relevance_score",
+              "displayName": "relevance_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        768,
+        0
+      ],
+      "id": "7e66b732-5298-42a5-a9f1-cf1d6f0a6f8a",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WiccSURrJQS8ikIj",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://newsapi.org/v2/everything",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "technology OR AI OR openai OR programming OR cloud OR startup"
+            },
+            {
+              "name": "language",
+              "value": "en"
+            },
+            {
+              "name": "sortBy",
+              "value": "publishedAt"
+            },
+            {
+              "name": "pageSize",
+              "value": "20"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-Key",
+              "value": "82206872fb284a6e9274110f9927c798"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "ba5dcf23-ebcd-4d5d-aa09-81de0a7d7433",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "news_text = \"\"\n\nfor i, item in enumerate(_items, start=1):\n    article = item[\"json\"]\n    news_text += f\"\"\"\nNotícia {i}\nTítulo: {article.get(\"title\", \"\")}\nDescrição: {article.get(\"description\", \"\")}\nFonte: {article.get(\"source\", \"\")}\nCategoria: {article.get(\"category\", \"\")}\nScore: {article.get(\"relevance_score\", 0)}\nURL: {article.get(\"url\", \"\")}\n\n\"\"\"\n\nreturn [\n    {\n        \"json\": {\n            \"news_brief_input\": news_text\n        }\n    }\n]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        0
+      ],
+      "id": "af969292-c17a-4eb0-919a-3e37551a4281",
+      "name": "Code in Python2"
+    },
+    {
+      "parameters": {
+        "chatId": "1253746370",
+        "text": "={{ $json.output[0].content[0].text }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1408,
+        0
+      ],
+      "id": "8bdecc70-2967-4791-9ecc-b4165b0d3eeb",
+      "name": "Send a text message",
+      "webhookId": "b6283c24-a2c1-4bdc-b7ae-89a5ee60e604",
+      "credentials": {
+        "telegramApi": {
+          "id": "hEuekFR4shrXWXU2",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in Python": {
+      "main": [
+        [
+          {
+            "node": "Code in Python1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in Python1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in Python2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Code in Python",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in Python2": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "18e02890-86aa-42eb-a1b1-6487a3d105f7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1c286650cbbcd1d87682aea0f1c9a1f31aff11fd5b2d6b5a65f6c5485f3a2737"
+  },
+  "id": "C33X97Z57oAWQjbe",
+  "tags": []
+}
